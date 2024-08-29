@@ -29,7 +29,6 @@ public class Reservation {
     @JoinColumn(name = "car_id")
     private Car car;
 
-    // Getters and Setters
     public int getId() {
         return id;
     }

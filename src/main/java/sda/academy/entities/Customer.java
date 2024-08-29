@@ -25,7 +25,6 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
