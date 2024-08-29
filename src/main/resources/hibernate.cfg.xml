@@ -11,5 +11,9 @@
         <property name="show_sql">true</property>
         <property name="hbm2ddl.auto">create</property>
 
+        <mapping class="Car"/>
+        <mapping class="Customer"/>
+        <mapping class="Reservation"/>
+
     </session-factory>
 </hibernate-configuration>
