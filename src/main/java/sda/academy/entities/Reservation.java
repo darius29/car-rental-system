@@ -2,7 +2,6 @@ package sda.academy.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
 
 import javax.persistence.*;
 import java.util.Date;
