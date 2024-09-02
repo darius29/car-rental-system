@@ -34,7 +34,7 @@ public class CustomerRepository extends BaseRepository<Customer, Integer>{
         return customers;
     }
 
-    public Customer findByLastName(String lastName){
+    public List<Customer> findListByLastName(String lastName){
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
@@ -43,6 +43,24 @@ public class CustomerRepository extends BaseRepository<Customer, Integer>{
         String hql = "from Customer where lastName = :parametru";
         Query<Customer> query = session.createQuery(hql, Customer.class);
         query.setParameter("parametru", lastName);
+
+        List<Customer> customers = query.getResultList();
+
+        transaction.commit();
+        session.close();
+        return customers;
+    }
+
+    public Customer findSingleByLastName(String lastName){
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Transaction transaction = session.getTransaction();
+
+        String hql = "from Customer where lastName = :parametru";
+        Query<Customer> query = session.createQuery(hql, Customer.class);
+        query.setParameter("parametru", lastName);
+
         Customer customer = query.getSingleResult();
 
         transaction.commit();
