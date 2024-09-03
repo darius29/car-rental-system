@@ -6,9 +6,9 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.Date;
 
+@Setter
 @Entity
 @Getter
-@Setter
 public class Reservation {
 
     @Id
@@ -20,6 +20,8 @@ public class Reservation {
     private Date startDate;
 
     private Date endDate;
+
+    private String plate;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
