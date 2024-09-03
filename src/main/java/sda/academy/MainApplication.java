@@ -8,16 +8,12 @@ import sda.academy.repositories.CustomerRepository;
 import sda.academy.repositories.ReservationRepository;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import sda.academy.repositories.CarRepository;
-import sda.academy.repositories.CustomerRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
 public class MainApplication {
-    static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -40,6 +36,18 @@ public class MainApplication {
         System.out.println("8. Afiseaza toti clienti.");
         System.out.println("9. Afiseaza un client.");
         System.out.println("10. Sterge un client.");
+        System.out.println("11. Adauga o rezervare.");
+        System.out.println("12. Editeaza o rezervare.");
+        System.out.println("13. Afiseaza toate rezervarile.");
+        System.out.println("14. Afiseaza o rezervare.");
+        System.out.println("15. Sterge o rezervare.");
+        System.out.println("16. Afiseaza rezervarile active ale unui client.");
+        System.out.println("17. Afiseaza rezervarile istorice ale unui client.");
+        System.out.println("18. Adauga o noua rezervare (Ilie).");
+        System.out.println("19. Afiseaza rezervarile.");
+        System.out.println("20. Modifica rezervarile.");
+        System.out.println("21. Extinde o rezervare.");
+        System.out.println("22. Sterge o rezervare.");
     }
 
     private static void executeCommand(int choice, Scanner scanner) {
@@ -48,7 +56,6 @@ public class MainApplication {
         CarRepository carRepository = new CarRepository();
         CustomerRepository customerRepository = new CustomerRepository();
         ReservationRepository reservationRepository = new ReservationRepository();
-      
         switch (choice) {
 
             case 1:
@@ -74,11 +81,12 @@ public class MainApplication {
                 break;
 
             case 7:
-                editCustomer(scanner, customerRepository);
+                editCustomerV1(scanner, customerRepository);
                 break;
 
             case 8:
                 displayAllCustomers(customerRepository);
+
                 break;
 
             case 9:
@@ -90,6 +98,34 @@ public class MainApplication {
                 break;
 
             case 11:
+                addNewReservation(scanner, reservationRepository, customerRepository, carRepository);
+                break;
+
+            case 12:
+                updateReservation(scanner, reservationRepository, carRepository);
+                break;
+
+            case 13:
+                displayAllReservation(reservationRepository);
+                break;
+
+            case 14:
+                displayOneReservation(scanner, reservationRepository);
+                break;
+            case 15:
+
+                deleteReservation(scanner, reservationRepository);
+                break;
+
+            case 16:
+                displayActiveReservationsForCustomer(scanner, customerRepository, reservationRepository);
+                break;
+
+            case 17:
+                displayHistoricalReservationsForCustomer(scanner, customerRepository, reservationRepository);
+                break;
+
+            case 18:
                 try {
                     makeReservation(scanner, customerRepository, carRepository, reservationRepository);
                 } catch (ParseException e) {
@@ -97,11 +133,11 @@ public class MainApplication {
                 }
                 break;
 
-            case 12:
+            case 19:
                 showCustomerReservations(scanner);
                 break;
 
-            case 13:
+            case 20:
                 try {
                     modifyReservationDates(scanner, reservationRepository);
                 } catch (ParseException e) {
@@ -109,11 +145,8 @@ public class MainApplication {
                 }
                 break;
 
-            case 14:
-//                changeReservationCar(scanner);
-                break;
 
-            case 15:
+            case 21:
                 try {
                     extendReservation(scanner);
                 } catch (ParseException e) {
@@ -121,22 +154,7 @@ public class MainApplication {
                 }
                 break;
 
-            case 16:
-
-                break;
-
-            case 17:
-
-                break;
-            case 18:
-
-                break;
-
-            case 19:
-
-                break;
-
-            case 20:
+            case 22:
                 try {
                     deleteReservation(scanner);
                 } catch (IllegalArgumentException e) {
@@ -144,45 +162,226 @@ public class MainApplication {
                 }
                 break;
 
-            case 21:
 
+
+        }
+    }
+
+    private static void displayActiveReservationsForCustomer(Scanner scanner, CustomerRepository customerRepository, ReservationRepository reservationRepository) {
+        System.out.println("Introdu numele clientului: ");
+        String lastName = scanner.nextLine();
+        Customer customer = customerRepository.findSingleByLastName(lastName);
+
+        if (customer == null) {
+            System.out.println("Clientul cu numele specificat nu exista.");
+            return;
+        }
+
+        List<Reservation> reservations = reservationRepository.findActiveReservationsByCustomer(customer.getId());
+
+        if (reservations.isEmpty()) {
+            System.out.println("Clientul nu are rezervari active.");
+        } else {
+            for (Reservation reservation : reservations) {
+                System.out.println("ID: " + reservation.getId() + ", Nume: " + reservation.getCustomer().getLastName() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
+                        ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate());
+            }
+        }
+    }
+
+    private static void displayHistoricalReservationsForCustomer(Scanner scanner, CustomerRepository customerRepository, ReservationRepository reservationRepository) {
+        System.out.println("Introdu numele clientului: ");
+        String lastName = scanner.nextLine();
+        Customer customer = customerRepository.findSingleByLastName(lastName);
+
+        if (customer == null) {
+            System.out.println("Clientul cu numele specificat nu exista.");
+            return;
+        }
+
+        List<Reservation> reservations = reservationRepository.findHistoricalReservationsByCustomer(customer.getId());
+
+        if (reservations.isEmpty()) {
+            System.out.println("Clientul nu are rezervari istorice.");
+        } else {
+            for (Reservation reservation : reservations) {
+                System.out.println("ID: " + reservation.getId() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
+                        ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate());
+            }
+        }
+    }
+
+    private static void deleteReservation(Scanner scanner, ReservationRepository reservationRepository) {
+        System.out.println("Introdu id-ul rezervarii: ");
+        int reservationId = scanner.nextInt();
+        scanner.nextLine();
+
+        Reservation reservation = reservationRepository.findById(reservationId);
+
+        if (reservation == null) {
+            System.out.println("Rezervarea cu ID-ul specificat nu exista.");
+            return;
+        }
+
+        reservationRepository.delete(reservation);
+
+    }
+
+    private static void updateReservation(Scanner scanner, ReservationRepository reservationRepository, CarRepository carRepository) {
+        System.out.println("Introdu id-ul rezervarii: ");
+        int reservationId = scanner.nextInt();
+        scanner.nextLine();
+
+        Reservation reservation = reservationRepository.findById(reservationId);
+
+        if (reservation == null) {
+            System.out.println("Rezervarea cu ID-ul specificat nu exista.");
+            return;
+        }
+
+        System.out.println("Ce doresti sa modifici?");
+        System.out.println("1. Prelungeste durata rezervarii (schimba data de sfarsit)");
+        System.out.println("2. Prelungeste durata rezervarii (schimba data de inceput)");
+        System.out.println("3. Schimba masina");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                System.out.println("Introdu noua data de inceput a rezervarii (YYYY-MM-DD): ");
+                LocalDate newStartDate = LocalDate.parse(scanner.nextLine());
+                if (newStartDate.isAfter(reservation.getEndDate())) {
+                    System.out.println("Data de inceput nu poate fi ulterioara datei de sfarsit. ");
+                    return;
+                }
+                reservation.setStartDate(newStartDate);
+                reservationRepository.update(reservation);
+                System.out.println("Durata rezervarii a fost prelungita");
                 break;
 
-            case 22:
+            case 2:
+                System.out.println("Introdu noua data de sfarsit a rezervarii (YYYY-MM-DD): ");
+                LocalDate newEndDate = LocalDate.parse(scanner.nextLine());
+                if (newEndDate.isBefore(reservation.getStartDate())) {
+                    System.out.println("Data de sfarsit nu poate fi anterioara datei de inceput");
+                    return;
+                }
 
+                reservation.setEndDate(newEndDate);
+                reservationRepository.update(reservation);
+                System.out.println("Durata rezervarii a fost prelungita");
                 break;
 
-            case 23:
+            case 3:
+                System.out.println("Introdu noul numar de inmatriculare al masinii:");
+                String licensePlate = scanner.nextLine();
 
+                Car newCar = carRepository.findByLicensePlate(licensePlate);
+
+                if (newCar == null) {
+                    System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
+                    return;
+                }
+
+                reservation.setCar(newCar);
+                reservationRepository.update(reservation);
+                System.out.println("Masina a fost schimbata");
                 break;
 
-            case 24:
 
-                break;
+        }
+    }
 
-            case 25:
+    private static void displayOneReservation(Scanner scanner, ReservationRepository reservationRepository) {
+        System.out.println("Introdu id-ul rezervarii");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        Reservation reservation = reservationRepository.findById(id);
 
-                break;
+        if (reservation == null) {
+            System.out.println("Rezervarea cu ID-ul specificat nu exista.");
+            return;
+        }
 
-            case 26:
+        System.out.println("ID: " + reservation.getId() + ", Nume clientului: " + reservation.getCustomer().getLastName() +
+                ", Prenume: " + reservation.getCustomer().getFirstName() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
+                ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate()
+        );
+    }
 
-                break;
+    private static void displayAllReservation(ReservationRepository reservationRepository) {
+        List<Reservation> reservations = reservationRepository.findAllReservation();
 
-            case 27:
+        if (reservations.isEmpty()) {
+            System.out.println("Nu există clienti în baza de date.");
+        } else {
+            for (Reservation c : reservations) {
+                System.out.println("ID: " + c.getId() + ", Nume clientului: " + c.getCustomer().getLastName() +
+                        ", Prenume: " + c.getCustomer().getFirstName() + ", Numarul de inmatriculare al masinii:  " + c.getCar().getLicensePlate() +
+                        ", Data de start: " + c.getStartDate() + ", Data de sfarsit a rezervarii: " + c.getEndDate()
+                );
+            }
+        }
+    }
 
-                break;
+    private static void addNewReservation(Scanner scanner, ReservationRepository reservationRepository, CustomerRepository customerRepository, CarRepository carRepository) {
+        System.out.println("Introdu numele clientului:");
+        String lastName = scanner.nextLine();
 
-            case 28:
+        Customer customer = customerRepository.findSingleByLastName(lastName);
 
-                break;
+        if (customer == null) {
+            System.out.println("Clientul cu numele specificat nu există.");
+            return;
+        }
 
-            case 29:
+        LocalDate startDate;
+        LocalDate endDate;
+        Car car;
 
-                break;
+        while (true) {
+            System.out.println("Introdu numarul de inmatriculare al masinii:");
+            String licensePlate = scanner.nextLine();
+            car = carRepository.findByLicensePlate(licensePlate);
 
-            case 30:
+            if (car == null) {
+                System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
+                continue;
+            }
 
-                break;
+            System.out.println("Introdu data de inceput a rezervarii (YYYY-MM-DD):");
+            startDate = LocalDate.parse(scanner.nextLine());
+
+            System.out.println("Introdu data de sfarsit a rezervarii (YYYY-MM-DD):");
+            endDate = LocalDate.parse(scanner.nextLine());
+            System.out.println("Test end date");
+            // Verifică dacă mașina este deja rezervata în intervalul specificat
+            List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(car.getId(), startDate, endDate);
+            System.out.println("Test list");
+            if (!overlappingReservations.isEmpty()) {
+                System.out.println("Masina este deja rezervata in intervalul specificat.");
+                System.out.println("Doresti să alegi o altă mașina? (da/nu):");
+                String response = scanner.nextLine();
+
+                if (response.equalsIgnoreCase("nu")) {
+                    return;
+                } else {
+                    continue;
+                }
+            }
+
+            System.out.println("Test");
+            Reservation reservation = new Reservation();
+            reservation.setReservationDate(LocalDate.now());
+            reservation.setStartDate(startDate);
+            reservation.setEndDate(endDate);
+            reservation.setCustomer(customer);
+            reservation.setCar(car);
+
+            reservationRepository.save(reservation);
+            System.out.println("Rezervarea a fost adăugată cu succes!");
+            break;
         }
     }
 
@@ -193,30 +392,15 @@ public class MainApplication {
         Reservation reservation = ReservationRepository.getReservation(reservationId);
         if (reservation != null) {
             System.out.println("Introdu ultima zi: (yyyy-MM-dd)");
-            String rawEndDate = scanner.nextLine();
-            Date newEndDate = formatter.parse(rawEndDate);
-            reservation.setEndDate(newEndDate);
+            LocalDate endDate = LocalDate.parse(scanner.nextLine());
+            reservation.setEndDate(endDate);
+
             ReservationRepository.updateReservation(reservation);
         } else {
             System.out.println("Reservation not found.");
         }
     }
 
-//    public static void changeReservationCar(Scanner scanner) {
-//        int reservationId;
-//        System.out.println("Introdu ID-ul rezervarii");
-//        reservationId = scanner.nextInt();
-//        Reservation reservation = ReservationRepository.getReservation(reservationId);
-//
-//        if (reservation != null) {
-//            System.out.println("Introdu noua masina");
-//            String newCar = scanner.nextLine();
-//            Reservation.setCar(newCar);
-//            ReservationRepository.updateReservation(reservation);
-//        } else {
-//            System.out.println("Reservation not found.");
-//        }
-//    }
 
     private static void deleteReservation(Scanner scanner) {
         int reservationId;
@@ -233,13 +417,11 @@ public class MainApplication {
 
         if (reservation != null) {
             System.out.println("Introdu prima zi: (yyyy-MM-dd)");
-            String rawStartDate = scanner.nextLine();
-            Date startDate = formatter.parse(rawStartDate);
+            LocalDate startDate =  LocalDate.parse(scanner.nextLine());
             reservation.setStartDate(startDate);
 
             System.out.println("Introdu ultima zi: (yyyy-MM-dd)");
-            String rawEndDate = scanner.nextLine();
-            Date endDate = formatter.parse(rawEndDate);
+            LocalDate endDate =  LocalDate.parse(scanner.nextLine());
             reservation.setEndDate(endDate);
 
             ReservationRepository.updateReservation(reservation);
@@ -289,13 +471,11 @@ public class MainApplication {
         reservation.setPlate(licensePlate);
 
         System.out.println("Introdu prima zi: (yyyy-MM-dd)");
-        String rawStartDate = scanner.nextLine();
-        Date startDate = formatter.parse(rawStartDate);
+        LocalDate startDate = LocalDate.parse(scanner.nextLine());
         reservation.setStartDate(startDate);
 
         System.out.println("Introdu ultima zi: (yyyy-MM-dd)");
-        String rawEndDate = scanner.nextLine();
-        Date endDate = formatter.parse(rawEndDate);
+        LocalDate endDate =  LocalDate.parse(scanner.nextLine());
         reservation.setEndDate(endDate);
 
         reservationRepository.save(reservation);
@@ -306,7 +486,7 @@ public class MainApplication {
        Customer customer;
         System.out.println("Introdu numele clientului: ");
         lastName = scanner.nextLine();
-        customer = customerRepository.findByLastName(lastName);
+        customer = customerRepository.findSingleByLastName(lastName);
 
         if (customer != null) {
             customerRepository.delete(customer);
@@ -315,12 +495,12 @@ public class MainApplication {
         }
     }
 
-    private static void editCustomer(Scanner scanner, CustomerRepository customerRepository){
+    private static void editCustomerV1(Scanner scanner, CustomerRepository customerRepository){
         String lastName;
         Customer customer;
         System.out.println("Introdu numele clientului: ");
         lastName = scanner.nextLine();
-        customer = customerRepository.findByLastName(lastName);
+        customer = customerRepository.findSingleByLastName(lastName);
 
         if (customer != null) {
             System.out.println("Introdu numele clientului: ");
@@ -341,9 +521,9 @@ public class MainApplication {
         }
 
         }
-    }
 
-    private static void deleteCustomer(Scanner scanner, CustomerRepository customerRepository) {
+
+    private static void deleteCustomerV1(Scanner scanner, CustomerRepository customerRepository) {
         System.out.println("Introdu numele clientului: ");
         String lastName = scanner.nextLine();
         List<Customer> customers = customerRepository.findListByLastName(lastName);
@@ -386,7 +566,7 @@ public class MainApplication {
         }
     }
 
-    private static void editCustomer(Scanner scanner, CustomerRepository customerRepository) {
+    private static void editCustomerV2(Scanner scanner, CustomerRepository customerRepository) {
         System.out.println("Introdu numele clientului: ");
         String lastName = scanner.nextLine();
         List<Customer> customers = customerRepository.findListByLastName(lastName);
@@ -446,9 +626,7 @@ public class MainApplication {
         Customer customer;
         System.out.println("Introdu numele clientului: ");
         lastName = scanner.nextLine();
-        customer = customerRepository.findByLastName(lastName);
         customer = customerRepository.findSingleByLastName(lastName);
-      
         if (customer != null) {
             System.out.println("ID: " + customer.getId() + ", Nume: " + customer.getLastName() +
                     ", Prenume: " + customer.getFirstName() + ", Numar permis: " + customer.getDriverLicenseNumber());

@@ -1,16 +1,103 @@
 package sda.academy.repositories;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+import org.hibernate.Transaction;
+
 import sda.academy.entities.Reservation;
 import sda.academy.util.HibernateUtil;
 
+import java.time.LocalDate;
 import java.util.List;
+
 
 public class ReservationRepository extends BaseRepository<Reservation, Integer>{
     public ReservationRepository() {
         super(Reservation.class);
+    }
+
+    public List<Reservation> findAllReservation(){
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession(); // 1
+        session.beginTransaction();
+
+        Query<Reservation> query = session.createQuery("from Reservation", Reservation.class);
+        List<Reservation> reservations = query.getResultList();
+
+        session.getTransaction().commit();
+        session.close();
+
+        return reservations;
+    }
+
+    public Reservation findById(int id){
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession(); // 1
+        session.beginTransaction();
+
+        Reservation reservation = session.get(Reservation.class, id);
+
+        session.getTransaction().commit();
+        session.close();
+
+        return reservation;
+    }
+
+    public List<Reservation> findActiveReservationsByCustomer(int customerId) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        Query<Reservation> query = session.createQuery(
+                "from Reservation where customer.id = :customerId and endDate >= :today", Reservation.class);
+        query.setParameter("customerId", customerId);
+        query.setParameter("today", LocalDate.now());
+
+        List<Reservation> reservations = query.getResultList();
+
+        session.getTransaction().commit();
+        session.close();
+
+        return reservations;
+    }
+
+    public List<Reservation> findHistoricalReservationsByCustomer(int customerId) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        Query<Reservation> query = session.createQuery(
+                "from Reservation where customer.id = :customerId and endDate < :today", Reservation.class);
+        query.setParameter("customerId", customerId);
+        query.setParameter("today", LocalDate.now());
+
+        List<Reservation> reservations = query.getResultList();
+
+        session.getTransaction().commit();
+        session.close();
+
+        return reservations;
+    }
+
+    public List<Reservation> findOverlappingReservations(int carId, LocalDate startDate, LocalDate endDate) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        Query<Reservation> query = session.createQuery(
+                "from Reservation where car.id = :carId and (startDate <= :endDate and endDate >= :startDate)",
+                Reservation.class);
+        query.setParameter("carId", carId);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
+
+        List<Reservation> reservations = query.getResultList();
+
+        session.getTransaction().commit();
+        session.close();
+
+        return reservations;
     }
 
     public static void saveReservation(Reservation reservation) {
