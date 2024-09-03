@@ -9,11 +9,11 @@
         <property name="connection.password">password</property>
         <property name="dialect">org.hibernate.dialect.MySQL8Dialect</property>
         <property name="show_sql">true</property>
-        <property name="hbm2ddl.auto">create</property>
+        <property name="hbm2ddl.auto">update</property>
 
-        <mapping class="Car"/>
-        <mapping class="Customer"/>
-        <mapping class="Reservation"/>
+        <mapping class="sda.academy.entities.Car"/>
+        <mapping class="sda.academy.entities.Customer"/>
+        <mapping class="sda.academy.entities.Reservation"/>
 
     </session-factory>
 </hibernate-configuration>

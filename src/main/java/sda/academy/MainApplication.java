@@ -10,13 +10,14 @@ import sda.academy.repositories.ReservationRepository;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import sda.academy.repositories.CarRepository;
+import sda.academy.repositories.CustomerRepository;
+
 import java.util.List;
 import java.util.Scanner;
 
 public class MainApplication {
-
     static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -47,6 +48,7 @@ public class MainApplication {
         CarRepository carRepository = new CarRepository();
         CustomerRepository customerRepository = new CustomerRepository();
         ReservationRepository reservationRepository = new ReservationRepository();
+      
         switch (choice) {
 
             case 1:
@@ -338,6 +340,105 @@ public class MainApplication {
             System.out.println("Clientul cu numele specificat nu există.");
         }
 
+        }
+    }
+
+    private static void deleteCustomer(Scanner scanner, CustomerRepository customerRepository) {
+        System.out.println("Introdu numele clientului: ");
+        String lastName = scanner.nextLine();
+        List<Customer> customers = customerRepository.findListByLastName(lastName);
+
+        if (customers.isEmpty()) {
+            System.out.println("Nu există clienți cu acest nume.");
+            return;
+        }
+
+        Customer selectedCustomer = null;
+
+        if (customers.size() == 1) {
+            selectedCustomer = customers.get(0);
+        } else {
+            System.out.println("Clienții găsiți: ");
+            for (int i = 0; i < customers.size(); i++) {
+                Customer customer = customers.get(i);
+                System.out.println((i + 1) + ". ID: " + customer.getId() + ", Nume: " + customer.getLastName() +
+                        ", Prenume: " + customer.getFirstName() +
+                        ", Numar permis de conducere: " + customer.getDriverLicenseNumber());
+            }
+
+            System.out.println("Introdu numărul corespunzător clientului pe care dorești să-l ștergi: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice < 1 || choice > customers.size()) {
+                System.out.println("Selecție invalidă.");
+                return;
+            }
+
+            selectedCustomer = customers.get(choice - 1);
+        }
+
+        if (selectedCustomer != null) {
+            customerRepository.delete(selectedCustomer);
+            System.out.println("Clientul a fost șters cu succes.");
+        } else {
+            System.out.println("Clientul cu numele specificat nu există.");
+        }
+    }
+
+    private static void editCustomer(Scanner scanner, CustomerRepository customerRepository) {
+        System.out.println("Introdu numele clientului: ");
+        String lastName = scanner.nextLine();
+        List<Customer> customers = customerRepository.findListByLastName(lastName);
+
+        if (customers.isEmpty()) {
+            System.out.println("Nu există clienți cu acest nume.");
+            return;
+        }
+
+        Customer selectedCustomer = null;
+
+        if (customers.size() == 1) {
+            selectedCustomer = customers.get(0);
+        } else {
+
+            System.out.println("Clienții găsiți: ");
+            for (int i = 0; i < customers.size(); i++) {
+                Customer customer = customers.get(i);
+                System.out.println((i + 1) + "Nume: " + customer.getLastName() +
+                        ", Prenume: " + customer.getFirstName() +
+                        ", Numar permis de conducere: " + customer.getDriverLicenseNumber());
+            }
+
+            System.out.println("Introdu numărul corespunzător clientului pe care dorești să-l editezi: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice < 1 || choice > customers.size()) {
+                System.out.println("Selecție invalidă.");
+                return;
+            }
+
+            selectedCustomer = customers.get(choice - 1);
+        }
+
+
+        if (selectedCustomer != null) {
+            System.out.println("Introdu noul nume de familie al clientului: ");
+            lastName = scanner.nextLine();
+            selectedCustomer.setLastName(lastName);
+
+            System.out.println("Introdu noul prenume al clientului: ");
+            String firstName = scanner.nextLine();
+            selectedCustomer.setFirstName(firstName);
+
+            System.out.println("Introdu noul număr al permisului de conducere al clientului: ");
+            String driverLicenseNumber = scanner.nextLine();
+            selectedCustomer.setDriverLicenseNumber(driverLicenseNumber);
+
+            customerRepository.update(selectedCustomer);
+            System.out.println("Clientul a fost actualizat cu succes.");
+        }
     }
 
     private static void displayOneCustomer(Scanner scanner, CustomerRepository customerRepository) {
@@ -346,6 +447,8 @@ public class MainApplication {
         System.out.println("Introdu numele clientului: ");
         lastName = scanner.nextLine();
         customer = customerRepository.findByLastName(lastName);
+        customer = customerRepository.findSingleByLastName(lastName);
+      
         if (customer != null) {
             System.out.println("ID: " + customer.getId() + ", Nume: " + customer.getLastName() +
                     ", Prenume: " + customer.getFirstName() + ", Numar permis: " + customer.getDriverLicenseNumber());
@@ -459,6 +562,7 @@ public class MainApplication {
 
         System.out.println("Introdu modelul masinii: ");
         String model = scanner.nextLine();
+
         car.setModel(model);
 
         System.out.println("Introduce pretul pe zi: ");
