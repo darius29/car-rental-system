@@ -102,7 +102,7 @@ public class MainApplication {
                 break;
 
             case 11:
-                addNewReservation(scanner, reservationRepository, customerRepository, carRepository);
+                addNewReservation(scanner, reservationRepository, customerRepository, carRepository, maintenanceRecordRepository);
                 break;
 
             case 12:
@@ -333,50 +333,75 @@ public class MainApplication {
         }
     }
 
-    private static void addNewReservation(Scanner scanner, ReservationRepository reservationRepository, CustomerRepository customerRepository, CarRepository carRepository) {
+    private static void addNewReservation(Scanner scanner, ReservationRepository reservationRepository, CustomerRepository customerRepository, CarRepository carRepository, MaintenanceRecordRepository maintenanceRecordRepository) {
         System.out.println("Introdu numele clientului:");
         String lastName = scanner.nextLine();
 
         Customer customer = customerRepository.findSingleByLastName(lastName);
 
         if (customer == null) {
-            System.out.println("Clientul cu numele specificat nu există.");
+            System.out.println("Clientul cu numele specificat nu exista.");
             return;
         }
 
+        Car car = null;
         LocalDate startDate;
         LocalDate endDate;
-        Car car;
 
         while (true) {
-            System.out.println("Introdu numarul de inmatriculare al masinii:");
-            String licensePlate = scanner.nextLine();
-            car = carRepository.findByLicensePlate(licensePlate);
-
             if (car == null) {
-                System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
-                continue;
+                System.out.println("Introdu numarul de inmatriculare al masinii:");
+                String licensePlate = scanner.nextLine();
+                car = carRepository.findByLicensePlate(licensePlate);
+
+                if (car == null) {
+                    System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
+                    continue;
+                }
             }
+
 
             System.out.println("Introdu data de inceput a rezervarii (YYYY-MM-DD):");
             startDate = LocalDate.parse(scanner.nextLine());
 
             System.out.println("Introdu data de sfarsit a rezervarii (YYYY-MM-DD):");
             endDate = LocalDate.parse(scanner.nextLine());
-            // Verifică dacă mașina este deja rezervata în intervalul specificat
-            List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(car.getId(), startDate, endDate);
-            if (!overlappingReservations.isEmpty()) {
-                System.out.println("Masina este deja rezervata in intervalul specificat.");
-                System.out.println("Doresti să alegi o altă mașina? (da/nu):");
-                String response = scanner.nextLine();
 
-                if (response.equalsIgnoreCase("nu")) {
-                    return;
-                } else {
+            // Verificam daca masina este in mentenanta in intervalul specificat
+            List<MaintenanceRecord> maintenanceRecords = maintenanceRecordRepository.findMaintenanceRecordsForCarInPeriod(car.getId(), startDate, endDate);
+            if (!maintenanceRecords.isEmpty()) {
+                System.out.println("Masina este in mentenanta in intervalul specificat.");
+                System.out.println("Doresti sa alegi o alta masina sau sa schimbi datele? (1 - Alta masina, 2 - Alte date):");
+                int response = scanner.nextInt();
+                scanner.nextLine();
+
+                if (response == 1) {
+                    car = null;
+                    continue;
+                } else if (response == 2) {
+
                     continue;
                 }
             }
 
+            // Verificam daca masina este deja rezervata in intervalul specificat
+            List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(car.getId(), startDate, endDate);
+            if (!overlappingReservations.isEmpty()) {
+                System.out.println("Masina este deja rezervata in intervalul specificat.");
+                System.out.println("Doresti sa alegi o alta masina sau sa schimbi datele? (1 - Alta masina, 2 - Alte date):");
+                int response = scanner.nextInt();
+                scanner.nextLine();
+
+                if (response == 1) {
+                    car = null; // Resetam masina pentru a permite alegerea alteia
+                    continue;
+                } else if (response == 2) {
+                    // Pastram masina curenta si repetam procesul doar pentru date
+                    continue;
+                }
+            }
+
+            // Daca nu exista suprapuneri, salvam rezervarea
             Reservation reservation = new Reservation();
             reservation.setReservationDate(LocalDate.now());
             reservation.setStartDate(startDate);
@@ -385,8 +410,8 @@ public class MainApplication {
             reservation.setCar(car);
 
             reservationRepository.save(reservation);
-            System.out.println("Rezervarea a fost adăugată cu succes!");
-            break;
+            System.out.println("Rezervarea a fost adaugata cu succes!");
+            break; // Iesim din bucla
         }
     }
 

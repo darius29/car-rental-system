@@ -7,6 +7,7 @@ import org.hibernate.query.Query;
 import sda.academy.entities.MaintenanceRecord;
 import sda.academy.util.HibernateUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class MaintenanceRecordRepository  extends BaseRepository<MaintenanceRecord, Integer> {
@@ -52,6 +53,25 @@ public class MaintenanceRecordRepository  extends BaseRepository<MaintenanceReco
 
         return maintenanceRecords;
 
+    }
+
+    public List<MaintenanceRecord> findMaintenanceRecordsForCarInPeriod(int carId, LocalDate startDate, LocalDate endDate) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        String hql = "from MaintenanceRecord where car.id = :carId and maintenanceDate between :startDate and :endDate";
+        Query<MaintenanceRecord> query = session.createQuery(hql, MaintenanceRecord.class);
+        query.setParameter("carId", carId);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
+
+        List<MaintenanceRecord> maintenanceRecords = query.getResultList();
+
+        session.getTransaction().commit();
+        session.close();
+
+        return maintenanceRecords;
     }
 
 
