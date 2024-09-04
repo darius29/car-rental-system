@@ -355,10 +355,8 @@ public class MainApplication {
 
             System.out.println("Introdu data de sfarsit a rezervarii (YYYY-MM-DD):");
             endDate = LocalDate.parse(scanner.nextLine());
-            System.out.println("Test end date");
             // Verifică dacă mașina este deja rezervata în intervalul specificat
             List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(car.getId(), startDate, endDate);
-            System.out.println("Test list");
             if (!overlappingReservations.isEmpty()) {
                 System.out.println("Masina este deja rezervata in intervalul specificat.");
                 System.out.println("Doresti să alegi o altă mașina? (da/nu):");
@@ -371,7 +369,6 @@ public class MainApplication {
                 }
             }
 
-            System.out.println("Test");
             Reservation reservation = new Reservation();
             reservation.setReservationDate(LocalDate.now());
             reservation.setStartDate(startDate);

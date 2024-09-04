@@ -57,9 +57,9 @@ public class CustomerRepository extends BaseRepository<Customer, Integer>{
         session.beginTransaction();
         Transaction transaction = session.getTransaction();
 
-        String hql = "from Customer where id = :parametru";
+        String hql = "from Customer where lastName = :parametru";
         Query<Customer> query = session.createQuery(hql, Customer.class);
-        query.setParameter("parametru", id);
+        query.setParameter("parametru", lastName);
 
         Customer customer = query.getSingleResult();
 
