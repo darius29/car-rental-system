@@ -4,27 +4,25 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
-public class Car {
+public class MaintenanceRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(unique = true)
-    private String licensePlate;
+    private LocalDate maintenanceDate;
 
-    private String model;
+    private String details;
 
-    private int pricePerDay;
-
-    @OneToMany(mappedBy = "car")
-    private List<MaintenanceRecord> maintenanceRecords;
-
+    @ManyToOne
+    @JoinColumn(name = "car_id")
+    private Car car;
 
 
 }

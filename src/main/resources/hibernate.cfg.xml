@@ -14,6 +14,7 @@
         <mapping class="sda.academy.entities.Car"/>
         <mapping class="sda.academy.entities.Customer"/>
         <mapping class="sda.academy.entities.Reservation"/>
+        <mapping class="sda.academy.entities.MaintenanceRecord"/>
 
     </session-factory>
 </hibernate-configuration>

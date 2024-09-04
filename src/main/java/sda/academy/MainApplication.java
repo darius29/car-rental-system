@@ -2,11 +2,12 @@ package sda.academy;
 
 import sda.academy.entities.Car;
 import sda.academy.entities.Customer;
+import sda.academy.entities.MaintenanceRecord;
 import sda.academy.entities.Reservation;
 import sda.academy.repositories.CarRepository;
 import sda.academy.repositories.CustomerRepository;
+import sda.academy.repositories.MaintenanceRecordRepository;
 import sda.academy.repositories.ReservationRepository;
-
 import java.text.ParseException;
 
 import java.time.LocalDate;
@@ -48,6 +49,7 @@ public class MainApplication {
         System.out.println("20. Modifica rezervarile.");
         System.out.println("21. Extinde o rezervare.");
         System.out.println("22. Sterge o rezervare.");
+        System.out.println("23. Adauga o inregistrare de mentenanta pentru masina.");
     }
 
     private static void executeCommand(int choice, Scanner scanner) {
@@ -55,6 +57,8 @@ public class MainApplication {
         Customer customer = new Customer();
         CarRepository carRepository = new CarRepository();
         CustomerRepository customerRepository = new CustomerRepository();
+        MaintenanceRecordRepository maintenanceRecordRepository = new MaintenanceRecordRepository();
+        MaintenanceRecord maintenanceRecord = new MaintenanceRecord();
         ReservationRepository reservationRepository = new ReservationRepository();
         switch (choice) {
 
@@ -160,6 +164,10 @@ public class MainApplication {
                 } catch (IllegalArgumentException e) {
                     System.out.println(e.getMessage());
                 }
+                break;
+
+            case 23:
+                addMaintenanceRecordForCar(scanner,  carRepository, maintenanceRecordRepository);
                 break;
 
 
@@ -478,6 +486,34 @@ public class MainApplication {
         reservationRepository.save(reservation);
     }
 
+    private static void addMaintenanceRecordForCar(Scanner scanner, CarRepository carRepository, MaintenanceRecordRepository maintenanceRecordRepository) {
+
+
+        Car car = new Car();
+        MaintenanceRecord maintenanceRecord = new MaintenanceRecord();
+
+        System.out.println("Introdu numarul de inmatriculare al masinii: ");
+        String licensePlate = scanner.nextLine();
+//        car.setLicensePlate(licensePlate);
+        car = carRepository.findByLicensePlate(licensePlate);
+        if ( car == null ) {
+            System.out.println("Masina cu numarul de inmatriculare specificat nu exista!");
+            return;
+        }
+
+        maintenanceRecord.setCar(car);
+        System.out.println("Adaugati o inregistrare de intretinere: ");
+        String details  = scanner.nextLine();
+        maintenanceRecord.setDetails(details);
+
+        System.out.print("Introduceti data intretinerii : ");
+        LocalDate maintenanceDate = LocalDate.parse(scanner.nextLine());
+        maintenanceRecord.setMaintenanceDate(maintenanceDate);
+
+        maintenanceRecordRepository.save(maintenanceRecord);
+
+    }
+
     private static void deleteCustomer(Scanner scanner, CustomerRepository customerRepository) {
         String lastName;
        Customer customer;
@@ -655,7 +691,6 @@ public class MainApplication {
 
         System.out.println("Introdu numarul permisului: ");
         String driverLicenseNumber = scanner.nextLine();
-
         customer.setDriverLicenseNumber(driverLicenseNumber);
 
 
