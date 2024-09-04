@@ -15,7 +15,7 @@ public class MaintenanceRecordRepository  extends BaseRepository<MaintenanceReco
         super(MaintenanceRecord.class);
     }
 
-    public List<MaintenanceRecord> findAll() {
+    public static List<MaintenanceRecord> findAll() {
 
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
         Session session = sessionFactory.openSession();

@@ -50,6 +50,7 @@ public class MainApplication {
         System.out.println("21. Extinde o rezervare.");
         System.out.println("22. Sterge o rezervare.");
         System.out.println("23. Adauga o inregistrare de mentenanta pentru masina.");
+        System.out.println("24. Istoricul de întreținere al fiecărei mașini.");
     }
 
     private static void executeCommand(int choice, Scanner scanner) {
@@ -170,8 +171,25 @@ public class MainApplication {
                 addMaintenanceRecordForCar(scanner,  carRepository, maintenanceRecordRepository);
                 break;
 
+            case 24:
+                displayAllMaintenaceRecord(maintenanceRecordRepository);
+                break;
 
 
+
+        }
+    }
+
+    private static void displayAllMaintenaceRecord(MaintenanceRecordRepository maintenanceRecordRepository) {
+        System.out.println("Istoricul de întreținere al fiecărei mașini:");
+        List<MaintenanceRecord> maintenanceRecords = MaintenanceRecordRepository.findAll();
+        if (maintenanceRecords.isEmpty()) {
+            System.out.println("Nu există note de mentenanță în baza de date.");
+        } else {
+            for (MaintenanceRecord m : maintenanceRecords) {
+                System.out.println("ID: " + m.getId() + ", Data: " + m.getMaintenanceDate() +
+                        ", Descriere: " + m.getDetails());
+            }
         }
     }
 
