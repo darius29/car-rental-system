@@ -20,7 +20,6 @@ public class MaintenanceRecordServices {
 
         System.out.println("Introdu numarul de inmatriculare al masinii: ");
         String licensePlate = scanner.nextLine();
-//        car.setLicensePlate(licensePlate);
         car = carRepository.findByLicensePlate(licensePlate);
         if ( car == null ) {
             System.out.println("Masina cu numarul de inmatriculare specificat nu exista!");
@@ -55,8 +54,11 @@ public class MaintenanceRecordServices {
             System.out.println("Clientul nu are rezervari istorice.");
         } else {
             for (Reservation reservation : reservations) {
-                System.out.println("ID: " + reservation.getId() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
-                        ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate());
+                System.out.println("ID: " + reservation.getId());
+                System.out.println("Numarul de inmatriculare al masinii: " + reservation.getCar().getLicensePlate());
+                System.out.println("Data de start: " + reservation.getStartDate());
+                System.out.println("Data de sfarsit a rezervarii: " + reservation.getEndDate());
+                System.out.println("-----------------------------------------");
             }
         }
     }
@@ -77,8 +79,12 @@ public class MaintenanceRecordServices {
             System.out.println("Clientul nu are rezervari active.");
         } else {
             for (Reservation reservation : reservations) {
-                System.out.println("ID: " + reservation.getId() + ", Nume: " + reservation.getCustomer().getLastName() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
-                        ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate());
+                System.out.println("ID: " + reservation.getId());
+                System.out.println("Nume: " + reservation.getCustomer().getLastName());
+                System.out.println("Numarul de inmatriculare al masinii: " + reservation.getCar().getLicensePlate());
+                System.out.println("Data de start: " + reservation.getStartDate());
+                System.out.println("Data de sfarsit a rezervarii: " + reservation.getEndDate());
+                System.out.println("-----------------------------------------");
             }
         }
     }
@@ -90,8 +96,11 @@ public class MaintenanceRecordServices {
             System.out.println("Nu există note de mentenanță în baza de date.");
         } else {
             for (MaintenanceRecord m : maintenanceRecords) {
-                System.out.println("ID: " + m.getId() + ", Data: " + m.getMaintenanceDate() +
-                        ", Descriere: " + m.getDetails());
+                System.out.println("Reservation ID: " + m.getId());
+                System.out.println("Car: " + m.getCar().getModel() + " (" + m.getCar().getLicensePlate() + ")");
+                System.out.println("Data: " + m.getMaintenanceDate());
+                System.out.println("Descriere: " + m.getDetails());
+                System.out.println("-----------------------------------------");
             }
         }
     }

@@ -44,6 +44,47 @@ public class ReservationServices {
         reservationRepository.save(reservation);
     }
 
+    public static Car suggestCar(CarRepository carRepository, ReservationRepository reservationRepository, MaintenanceRecordRepository maintenanceRecordRepository, Car car, LocalDate startDate, LocalDate endDate, Scanner scanner) {
+        int lowerBound = (int) (car.getPricePerDay() * 0.67); // 20 din 30
+        int upperBound = (int) (car.getPricePerDay() * 1.33); // 40 din 30
+
+        System.out.println("Cautam masini alternative in intervalul de pret " + lowerBound + " - " + upperBound + "...");
+
+        // Găsim mașini disponibile cu preț în intervalul specificat
+        List<Car> alternativeCars = carRepository.findAvailableCarsInPriceRange(lowerBound, upperBound, startDate, endDate, 3);
+
+        if (alternativeCars.isEmpty()) {
+            System.out.println("Nu am gasit masini alternative in intervalul de pret specificat. Cautam masini disponibile, ordonate dupa pret...");
+
+            // Găsim 3 mașini disponibile în perioada selectată, ordonate după preț
+            alternativeCars = carRepository.findAvailableCarsOrderedByPrice(startDate, endDate, 3);
+
+            if (alternativeCars.isEmpty()) {
+                System.out.println("Nu am gasit masini disponibile.");
+                return null;
+            }
+        }
+
+        // Afisam masinile disponibile
+        System.out.println("Masini alternative disponibile:");
+        for (int i = 0; i < alternativeCars.size(); i++) {
+            Car alternativeCar = alternativeCars.get(i);
+            System.out.println((i + 1) + ". ID: " + alternativeCar.getId() + ", Model: " + alternativeCar.getModel() + "(" + alternativeCar.getLicensePlate() + ")" + ", Pret/zi: " + alternativeCar.getPricePerDay());
+        }
+
+        System.out.println("Alege o masina alternativa introducand numarul corespunzator: ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (choice < 1 || choice > alternativeCars.size()) {
+            System.out.println("Selectie invalida.");
+            return null;
+        }
+
+        // Returnăm mașina aleasa
+        return alternativeCars.get(choice - 1);
+    }
+
     public static void addNewReservation(Scanner scanner, ReservationRepository reservationRepository, CustomerRepository customerRepository, CarRepository carRepository, MaintenanceRecordRepository maintenanceRecordRepository) {
         System.out.println("Introdu numele clientului:");
         String lastName = scanner.nextLine();
@@ -55,23 +96,21 @@ public class ReservationServices {
             return;
         }
 
-        Car car = null;
+        Car car;
         LocalDate startDate;
         LocalDate endDate;
 
         while (true) {
-            if (car == null) {
-                System.out.println("Introdu numarul de inmatriculare al masinii:");
-                String licensePlate = scanner.nextLine();
-                car = carRepository.findByLicensePlate(licensePlate);
+            System.out.println("Introdu numarul de inmatriculare al masinii:");
+            String licensePlate = scanner.nextLine();
+            car = carRepository.findByLicensePlate(licensePlate);
 
-                if (car == null) {
-                    System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
-                    continue;
-                }
+            if (car == null) {
+                System.out.println("Masina cu numarul de inmatriculare specificat nu exista.");
+                continue;
             }
 
-
+            // Alegerea perioadei rezervarii
             System.out.println("Introdu data de inceput a rezervarii (YYYY-MM-DD):");
             startDate = LocalDate.parse(scanner.nextLine());
 
@@ -82,16 +121,15 @@ public class ReservationServices {
             List<MaintenanceRecord> maintenanceRecords = maintenanceRecordRepository.findMaintenanceRecordsForCarInPeriod(car.getId(), startDate, endDate);
             if (!maintenanceRecords.isEmpty()) {
                 System.out.println("Masina este in mentenanta in intervalul specificat.");
-                System.out.println("Doresti sa alegi o alta masina sau sa schimbi datele? (1 - Alta masina, 2 - Alte date):");
-                int response = scanner.nextInt();
-                scanner.nextLine();
 
-                if (response == 1) {
-                    car = null;
-                    continue;
-                } else if (response == 2) {
+                Car alternativeCar = suggestCar(carRepository, reservationRepository, maintenanceRecordRepository, car, startDate, endDate, scanner);
 
-                    continue;
+                if (alternativeCar != null) {
+                    // Utilizatorul alege o mașina alternativa, continuam cu rezervarea
+                    car = alternativeCar;
+                } else {
+                    System.out.println("Nu s-a ales nicio masina alternativa.");
+                    return;
                 }
             }
 
@@ -99,32 +137,33 @@ public class ReservationServices {
             List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(car.getId(), startDate, endDate);
             if (!overlappingReservations.isEmpty()) {
                 System.out.println("Masina este deja rezervata in intervalul specificat.");
-                System.out.println("Doresti sa alegi o alta masina sau sa schimbi datele? (1 - Alta masina, 2 - Alte date):");
-                int response = scanner.nextInt();
-                scanner.nextLine();
 
-                if (response == 1) {
-                    car = null; // Resetam masina pentru a permite alegerea alteia
-                    continue;
-                } else if (response == 2) {
-                    // Pastram masina curenta si repetam procesul doar pentru date
-                    continue;
+                Car alternativeCar = suggestCar(carRepository, reservationRepository, maintenanceRecordRepository, car, startDate, endDate, scanner);
+
+                if (alternativeCar != null) {
+                    // Utilizatorul alege o masina alternativa, continuam cu rezervarea
+                    car = alternativeCar;
+                } else {
+                    System.out.println("Nu s-a ales nicio masina alternativa.");
+                    return;
                 }
             }
 
-            // Daca nu exista suprapuneri, salvam rezervarea
+            // Daca masina este disponibila sau s-a ales o masina alternativa, adaugam rezervarea
             Reservation reservation = new Reservation();
             reservation.setReservationDate(LocalDate.now());
             reservation.setStartDate(startDate);
             reservation.setEndDate(endDate);
             reservation.setCustomer(customer);
             reservation.setCar(car);
+            reservation.setPlate(car.getLicensePlate());
 
             reservationRepository.save(reservation);
             System.out.println("Rezervarea a fost adaugata cu succes!");
-            break; // Iesim din bucla
+            break;
         }
     }
+
 
     public static void displayOneReservation(Scanner scanner, ReservationRepository reservationRepository) {
         System.out.println("Introdu id-ul rezervarii");
@@ -137,10 +176,13 @@ public class ReservationServices {
             return;
         }
 
-        System.out.println("ID: " + reservation.getId() + ", Nume clientului: " + reservation.getCustomer().getLastName() +
-                ", Prenume: " + reservation.getCustomer().getFirstName() + ", Numarul de inmatriculare al masinii:  " + reservation.getCar().getLicensePlate() +
-                ", Data de start: " + reservation.getStartDate() + ", Data de sfarsit a rezervarii: " + reservation.getEndDate()
-        );
+        System.out.println("ID: " + reservation.getId());
+        System.out.println("Nume clientului: " + reservation.getCustomer().getLastName());
+        System.out.println("Prenume: " + reservation.getCustomer().getFirstName());
+        System.out.println("Numarul de inmatriculare al masinii: " + reservation.getCar().getLicensePlate());
+        System.out.println("Data de start: " + reservation.getStartDate());
+        System.out.println("Data de sfarsit a rezervarii: " + reservation.getEndDate());
+        System.out.println("---------------------------");
     }
 
     public static void displayAllReservation(ReservationRepository reservationRepository) {
@@ -149,11 +191,13 @@ public class ReservationServices {
         if (reservations.isEmpty()) {
             System.out.println("Nu există clienti în baza de date.");
         } else {
-            for (Reservation c : reservations) {
-                System.out.println("ID: " + c.getId() + ", Nume clientului: " + c.getCustomer().getLastName() +
-                        ", Prenume: " + c.getCustomer().getFirstName() + ", Numarul de inmatriculare al masinii:  " + c.getCar().getLicensePlate() +
-                        ", Data de start: " + c.getStartDate() + ", Data de sfarsit a rezervarii: " + c.getEndDate()
-                );
+            for (Reservation reservation : reservations) {
+                System.out.println("Reservation ID: " + reservation.getId());
+                System.out.println("Car: " + reservation.getCar().getModel() + " (" + reservation.getCar().getLicensePlate() + ")");
+                System.out.println("Reservation Date: " + reservation.getReservationDate());
+                System.out.println("Start Date: " + reservation.getStartDate());
+                System.out.println("End Date: " + reservation.getEndDate());
+                System.out.println("-----------------------------------------");
             }
         }
     }
@@ -202,10 +246,10 @@ public class ReservationServices {
 
         switch (choice) {
             case 1:
-                System.out.println("Introdu noua data de inceput a rezervarii (YYYY-MM-DD): ");
+                System.out.println("Introdu noua data de sfarsit a rezervarii (YYYY-MM-DD): ");
                 LocalDate newStartDate = LocalDate.parse(scanner.nextLine());
                 if (newStartDate.isAfter(reservation.getEndDate())) {
-                    System.out.println("Data de inceput nu poate fi ulterioara datei de sfarsit. ");
+                    System.out.println("Data de sfarsit nu poate fi ulterioara datei de sfarsit. ");
                     return;
                 }
                 reservation.setStartDate(newStartDate);
@@ -306,5 +350,5 @@ public class ReservationServices {
         ReservationRepository.deleteReservation(reservationId);
     }
 
-
 }
+

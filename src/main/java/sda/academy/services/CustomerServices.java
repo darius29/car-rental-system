@@ -30,8 +30,11 @@ public class CustomerServices {
             System.out.println("Nu există clienti în baza de date.");
         } else {
             for (Customer c : customers) {
-                System.out.println("ID: " + c.getId() + ", Nume: " + c.getLastName() +
-                        ", Prenume: " + c.getFirstName() + ", Numar permis: " + c.getDriverLicenseNumber());
+                System.out.println("ID: " + c.getId());
+                System.out.println("Nume: " + c.getLastName());
+                System.out.println("Prenume: " + c.getFirstName());
+                System.out.println("Numar permis: " + c.getDriverLicenseNumber());
+                System.out.println("-------------------");
             }
         }
     }
@@ -43,8 +46,11 @@ public class CustomerServices {
         lastName = scanner.nextLine();
         customer = customerRepository.findSingleByLastName(lastName);
         if (customer != null) {
-            System.out.println("ID: " + customer.getId() + ", Nume: " + customer.getLastName() +
-                    ", Prenume: " + customer.getFirstName() + ", Numar permis: " + customer.getDriverLicenseNumber());
+            System.out.println("ID: " + customer.getId());
+            System.out.println("Nume: " + customer.getLastName());
+            System.out.println("Prenume: " + customer.getFirstName());
+            System.out.println("Numar permis: " + customer.getDriverLicenseNumber());
+            System.out.println("-------------------");
         } else {
             System.out.println("Clientul cu id-ul specificat nu există.");
         }
@@ -64,7 +70,7 @@ public class CustomerServices {
         }
     }
 
-    public static void editCustomerV1(Scanner scanner, CustomerRepository customerRepository){
+    public static void editCustomerV1(Scanner scanner, CustomerRepository customerRepository) {
         String lastName;
         Customer customer;
         System.out.println("Introdu numele clientului: ");
@@ -92,7 +98,7 @@ public class CustomerServices {
     }
 
 
-    private static void deleteCustomerV1(Scanner scanner, CustomerRepository customerRepository) {
+    public static void deleteCustomerV1(Scanner scanner, CustomerRepository customerRepository) {
         System.out.println("Introdu numele clientului: ");
         String lastName = scanner.nextLine();
         List<Customer> customers = customerRepository.findListByLastName(lastName);

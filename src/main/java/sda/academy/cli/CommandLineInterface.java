@@ -52,7 +52,6 @@ public class CommandLineInterface {
         CarRepository carRepository = new CarRepository();
         CustomerRepository customerRepository = new CustomerRepository();
         MaintenanceRecordRepository maintenanceRecordRepository = new MaintenanceRecordRepository();
-        MaintenanceRecord maintenanceRecord = new MaintenanceRecord();
         ReservationRepository reservationRepository = new ReservationRepository();
 
         switch (choice) {

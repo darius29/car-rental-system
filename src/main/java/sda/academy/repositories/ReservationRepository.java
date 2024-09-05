@@ -5,6 +5,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.hibernate.Transaction;
 
+import sda.academy.entities.Car;
 import sda.academy.entities.Reservation;
 import sda.academy.util.HibernateUtil;
 
@@ -19,7 +20,7 @@ public class ReservationRepository extends BaseRepository<Reservation, Integer>{
 
     public List<Reservation> findAllReservation(){
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        Session session = sessionFactory.openSession(); // 1
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
 
         Query<Reservation> query = session.createQuery("from Reservation", Reservation.class);
@@ -100,18 +101,6 @@ public class ReservationRepository extends BaseRepository<Reservation, Integer>{
         return reservations;
     }
 
-    public static void saveReservation(Reservation reservation) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            session.save(reservation);
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-        }
-    }
 
     public static void updateReservation(Reservation reservation) {
         Transaction transaction = null;
@@ -156,11 +145,9 @@ public class ReservationRepository extends BaseRepository<Reservation, Integer>{
         try {
             transaction = session.beginTransaction();
 
-            // Căutarea rezervării după ID
             Reservation reservation = session.get(Reservation.class, reservationId);
 
             if (reservation != null) {
-                // Ștergerea rezervării dacă aceasta există
                 session.delete(reservation);
                 System.out.println("Reservation deleted successfully.");
             } else {
